@@ -1,8 +1,41 @@
 # Paradigm Brake Module controller
 
-This controller implements the Realtime brake control logic for Paradigm air
+This controller implements the Realtime brake control logic for the Paradigm air
 brakes. The module receives instructions on desired operating mode and desired
 force setpoint from a master node over UDP. Should a packet
+
+# Getting Started
+
+First lets setup the [Platformio IDE](http://platformio.org/), which is a set pf extensions for embedded development in Atom.
+
+1. Download & Install Atom from [atom.io](https://atom.io)
+2. Open the package manager (CMD + SHIFT + P) and type `platformio` in the search box
+3. Install all 4 official plaformio packages and follow any additional instructions (like installing LLVM & clang)
+
+Now that you have atom and platformio, you can clone this repo and then open the repo in atom
+
+1. Clone the repo however you desire
+2. Open the folder in atom (File > Open Folder)
+3. The platformio sidebar should show up, click the `Verify` button (check box icon, second one down)
+4. Ensure that the project builds successfully.
+
+Now for the fun part, grab an arduino nano (Also supports M0's you will need to uncomment some stuff [here](platformio.ini) though)
+
+1. Plug in the arduino
+2. Click the Upload button to build and upload to the arduino
+3. Click the Serial Console button (looks like a wall plug), it should autodetect the port, click start
+4. The serial console will start spewing `debug()` output
+
+```
+[DEBUG] [loop in src\main.cpp:268] --- Starting Network
+[DEBUG] [net_recv_request in src\network.cpp:19] Requesting Packet
+[DEBUG] [net_recv_request in src\network.cpp:21] Packet Back
+[DEBUG] [loop in src\main.cpp:272] --- Read Serial
+[DEBUG] [loop in src\main.cpp:275] --- Starting Sensors
+[DEBUG] [loop in src\main.cpp:279] --- Starting States
+[DEBUG] [loop in src\main.cpp:283] --- Starting Actuators
+```
+
 
 # Dev Notes
 
