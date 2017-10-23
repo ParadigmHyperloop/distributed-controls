@@ -1,4 +1,4 @@
-# Paradigm Brake Module controller
+# Paradigm Brake Module controller [![Build Status](https://travis-ci.org/ParadigmHyperloop/distributed-controls.svg?branch=master)](https://travis-ci.org/ParadigmHyperloop/distributed-controls)
 
 This controller implements the Realtime brake control logic for the Paradigm air
 brakes. The module receives instructions on desired operating mode and desired
