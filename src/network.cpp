@@ -16,31 +16,37 @@ char ReplyBuffer[UDP_TX_PACKET_MAX_SIZE];  // buffer to build outgoing packet,
 EthernetUDP Udp;
 
 int net_recv_request(req_packet_t *pkt) {
+  debug("Requesting Packet");
   int packetSize = Udp.parsePacket();
+  debug("Packet Back");
   if (packetSize) {
-    Serial.print("Received packet of size ");
-    Serial.println(packetSize);
+    debug("Received packet of size ");
+    debug(packetSize);
 
-    Udp.read((uint8_t *)&pkt, sizeof(req_packet_t));
-    Serial.println("Contents:");
-    Serial.println((char *)&pkt);
+    Udp.read((uint8_t *)pkt, sizeof(req_packet_t));
+    debug("Contents:");
+    debug((char *)pkt);
 
   }
   return (packetSize == sizeof(req_packet_t) ? 1 : 0);
 }
 
 int net_send_response(resp_packet_t *pkt) {
+  debug("Sending Response: ");
+  debug((char*)pkt);
   // send a reply to the IP address and port that sent us the packet we
   // received
   Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-  Udp.write((uint8_t *)&pkt, sizeof(resp_packet_t));
+  Udp.write((uint8_t *)pkt, sizeof(resp_packet_t));
   Udp.endPacket();
   return 1;
 }
 
 int net_setup(void) {
     // start the Ethernet and UDP:
+    debug("Ethernet.begin");
     Ethernet.begin(mac, ip);
+    debug("Udp.begin");
     Udp.begin(localPort);
     return 0;
 }

@@ -104,7 +104,7 @@ void handle_network() {
     return;
   }
 
-  BRAKE.mode = req.mode;
+  node_set_mode(&BRAKE, (node_mode_t)req.mode);
   if (BRAKE.mode == kModeStandard) {
     BRAKE.force_setpoint = req.arg0;
     BRAKE.ref_press = req.arg1;
@@ -144,7 +144,7 @@ void update_states() {
     }
   } else if (BRAKE.mode == kModeReset) {
     if (BRAKE.piston_press.val < PISTON_EMPTY_THRESH) {
-      delay(101); // hit watchdog timer
+      delay(100); // hit watchdog timer
     }
   }
 }
@@ -180,26 +180,41 @@ static void brake_standard_mode() {
 }
 
 void output_actuators() {
-  switch (BRAKE.mode) {
+  switch (BRAKE.mode) {;
     case kModeStandard:
       brake_standard_mode();
       break;
-  case kModeManual:
-    brake_valve_set(&BRAKE.valve, BRAKE.override_state);
-    break;
-  case kModeInhibit:
-    // No Actiuations are allowed
-    brake_valve_set(&BRAKE.valve, kBrakeValveReleased);
-    break;
-  case kModeEmergency:
-    brake_valve_set(&BRAKE.valve, kBrakeValveEngaged);
-    // NOTE: if packet arrives from controller, the emergency is lifted.
-    break;
-  default:
-    abort();
+    case kModeManual:
+      brake_valve_set(&BRAKE.valve, BRAKE.override_state);
+      break;
+    case kModeInit:
+    case kModeInhibit:
+    case kModeReset:
+    case kModeTest:
+    case kModeProgram:
+      // No Actiuations are allowed
+      brake_valve_set(&BRAKE.valve, kBrakeValveReleased);
+      break;
+    case kModeEmergency:
+      brake_valve_set(&BRAKE.valve, kBrakeValveEngaged);
+      // NOTE: if packet arrives from controller, the emergency is lifted.
+      break;
+    default:
+      abort();
   }
 }
-
+void read_serial() {
+  if (Serial.available() > 0) {
+    // read the incoming byte:
+    uint8_t incomingByte = Serial.read();
+    debug("Old Mode:");
+    debug(BRAKE.mode);
+    uint8_t mode = incomingByte - '0';
+    node_set_mode(&BRAKE, (node_mode_t)mode);
+    debug("New Mode:");
+    debug(BRAKE.mode);
+  }
+}
 /////////////////////// SETUP & LOOP /////////////////////
 
 void setup() {
@@ -209,8 +224,13 @@ void setup() {
 #endif
   Serial.begin(9600);
 
+  Serial.print("Waiting for Serial Connection\n");
+  delay(1000);
+
   // Initial Mode
   BRAKE.mode = kModeInit;
+
+  info("Configuring Sensors\n");
 
   // Setup Sensors
   sensor_init(&BRAKE.dist_front, (char *)"dist_front", 0, _dist_sensor);
@@ -227,9 +247,15 @@ void setup() {
 
   // Set the UDP message timeout
   BRAKE.last_message = millis();
+  info("Last Message Set to:");
+  info(BRAKE.last_message);
 
+  info("Network Setup");
+  net_setup();
+  info("Network Setup Done!");
 #ifdef ARDUINO_SAMD_ZERO
   // 100ms watchdog.  Auto Reset on hang
+  info("Setting WatchDog to 100 -> End info output");
   Watchdog.disable();
   Watchdog.enable(100);
 #endif
@@ -239,16 +265,28 @@ void loop() {
 #ifdef ARDUINO_SAMD_ZERO
   Watchdog.reset();
 #endif
-
+  debug("--- Starting Network");
   // if there's data available, read a packet
   handle_network();
 
+  debug("--- Read Serial");
+  read_serial();
+
+  debug("--- Starting Sensors");
   // Read in and update sensors
   read_sensors();
 
+  debug("--- Starting States");
   // Change controller mode if needed (network timeout, controller reset)
   update_states();
 
+  debug("--- Starting Actuators");
   // Outputs
   output_actuators();
+
+  // delay
+  debug("Completed Loop");
+  debug(BRAKE.mode);
+  debug(BRAKE.valve.state);
+  delay(10);
 }

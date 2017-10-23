@@ -8,6 +8,9 @@
 
 
 /////////////////////// NODE STATE /////////////////////
+
+#define N_MODES 8
+
 typedef enum node_mode {
   kModeInit = 0, // Implemented
   kModeStandard = 1, // Implemented
@@ -35,5 +38,6 @@ typedef struct node {
   brake_valve_state_t override_state; // Manual Mode desired state
 } node_t;
 
-void add_sensor(node_t *n, sensor_t *s);
+void node_add_sensor(node_t *n, sensor_t *s);
+void node_set_mode(node_t * n, node_mode_t new_mode);
 #endif

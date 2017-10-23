@@ -10,11 +10,12 @@ void sensor_init(sensor_t *s, char *name, uint8_t channel, processor p) {
   s->name[i] = '\0';
   s->channel = channel;
   s->raw = 0;
-
+  debug(channel, DEC);
   SENSOR_COUNT_RESET(s);
 
   s->process = p;
   s->process(s);
+  debug("sensor init done!");
 }
 
 void sensor_destroy(sensor_t *s) {
