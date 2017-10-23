@@ -2,7 +2,7 @@
 
 This controller implements the Realtime brake control logic for the Paradigm air
 brakes. The module receives instructions on desired operating mode and desired
-force setpoint from a master node over UDP. Should a packet
+force setpoint from a master node over UDP.
 
 # Getting Started
 
