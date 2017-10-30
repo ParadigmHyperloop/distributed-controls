@@ -25,7 +25,6 @@ bool brake_is_locked(brake_valve_t *b) {
 }
 
 void brake_valve_init(brake_valve_t *b, int engage_pin, int release_pin) {
-  debug("Running");
   b->engage_pin = engage_pin;
   b->release_pin = release_pin;
   b->last_update = 0;

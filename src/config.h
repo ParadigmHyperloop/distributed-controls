@@ -17,11 +17,31 @@
 #define LISTEN_PORT 8888 // UDP
 #endif
 
-#define MESSAGE_TIMEOUT 1000      // milliseconds
-#define PISTON_EMPTY_THRESH 3     // PSI
-#define PISTON_AREA 40            // Square Inches
-#define VALVE_FLUTTER_MS 100      // milliseconds
+/* If a mesage is not recieved within this amount of time, emergency state */
+#define MESSAGE_TIMEOUT 1000 // milliseconds
+/* The differential pressure at which the piston is considered empty */
+#define PISTON_EMPTY_THRESH 3 // PSI
+/* The total surface area of the pistons */
+#define PISTON_AREA 40 // Square Inches
+/* The amount of time it takes for the solenoid to fully actuate */
+#define VALVE_FLUTTER_MS 100 // milliseconds
+/* The acceptable error for the force setpoint */
 #define FORCE_SETPOINT_THRESH 100 // Newtons
+/* The primary watchdog timer, if the loop takes longer than this, reset */
+#define WATCHDOG_TIMEOUT 100 // milliseconds
+/* The watchdog for the setup function */
+#define STARTUP_WATCHDOG 4000 // milliseconds
+/* The Serial Baud Rate. Note this strongly affects the watchdog timers */
+#define SERIAL_BAUD 9600 // Baud
+
+#ifdef DEBUG
+/* The delay to allow a serial client to connect for debug logging */
+#define BOOT_DELAY 1000 // milliseconds
+#endif
+
+#if STARTUP_WATCHDOG < BOOT_DELAY + BOOT_DELAY + 1000
+#error "STARTUP_WATCHDOG should be increased or BOOT_DELAY decreased"
+#endif
 
 #define MAX_SENSORS 16
 
@@ -34,10 +54,11 @@
  */
 #define SENSOR_COUNT_INIT 0x0F // Require 15 samples before readings are valid
 
-#ifdef DEBUG
-#define debug(...)                                                             \
+#define output(type, ...)                                                      \
   do {                                                                         \
-    Serial.print("[DEBUG] [");                                                 \
+    Serial.print("[");                                                         \
+    Serial.print((type));                                                      \
+    Serial.print("] [");                                                       \
     Serial.print(__FUNCTION__);                                                \
     Serial.print(" in ");                                                      \
     Serial.print(__FILE__);                                                    \
@@ -48,23 +69,20 @@
     Serial.print("\n");                                                        \
     Serial.flush();                                                            \
   } while (0);
+
+#ifdef DEBUG
+#define debug(...) output("DEBUG", __VA_ARGS__)
 #else
 #define debug(...)
 #endif
 
-// TODO Absract these
-#define info(...)                                                              \
+#define info(...) output("INFO", __VA_ARGS__)
+#define warn(...) output("WARNI", __VA_ARGS__)
+#define error(...) output("ERROR", __VA_ARGS__)
+#define fault(...)                                                             \
   do {                                                                         \
-    Serial.print("[INFO] [");                                                  \
-    Serial.print(__FUNCTION__);                                                \
-    Serial.print(" in ");                                                      \
-    Serial.print(__FILE__);                                                    \
-    Serial.print(":");                                                         \
-    Serial.print(__LINE__, DEC);                                               \
-    Serial.print("] ");                                                        \
-    Serial.print(__VA_ARGS__);                                                 \
-    Serial.print("\n");                                                        \
-    Serial.flush();                                                            \
+    output("FAULT", __VA_ARGS__);                                              \
+    abort();                                                                   \
   } while (0);
 
 #endif

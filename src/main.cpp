@@ -60,29 +60,41 @@
 
 node_t BRAKE = {0};
 
-/////////////////////// SENSOR HELPERS /////////////////////
+/////////////////////// SENSOR CALIBRARION FUNCTIONS /////////////////////
 
-int _dist_sensor(sensor_t *s) {
+static int _dist_sensor(sensor_t *s) {
+  // Linear calibrarion function
   uint32_t new_val = map(s->raw, 0, 4095, 220, 10); // Bullshit
+  // Low Pass Filter
   s->val = BIAS(s->val, new_val, 0, 255);
   return 0;
 }
 
-int _temp_sensor(sensor_t *s) {
+static int _temp_sensor(sensor_t *s) {
+  // Linear calibrarion function
   uint32_t new_val = map(s->raw, 0, 4095, 220, 10); // Bullshit
+  // Low Pass Filter
   s->val = BIAS(s->val, new_val, 0, 255);
   return 0;
 }
 
-int _press_sensor(sensor_t *s) {
+static int _press_sensor(sensor_t *s) {
+  // Linear calibrarion function
   uint32_t new_val = map(s->raw, 0, 4095, 220, 10); // Bullshit
+  // Low Pass Filter
   s->val = BIAS(s->val, new_val, 0, 255);
   return 0;
 }
 
 /////////////////////// CONTROLLER UTILITIES /////////////////////
 
-int32_t calculate_current_force() {
+/**
+ * Calculates the force applied by the brakes using the current pressure in
+ * the pistons.
+ *
+ * @return The Force in newtons
+ */
+static int32_t calculate_current_force() {
   int32_t relative_100s_psi = BRAKE.piston_press.val - BRAKE.ref_press;
 
   int32_t force_pounds = (relative_100s_psi * PISTON_AREA) / 100;
@@ -91,9 +103,14 @@ int32_t calculate_current_force() {
 }
 
 /////////////////////// CORE CONTROLLER STEPS /////////////////////
-/* Do: Network, Sensors, State, then Outputs */
 
-void handle_network() {
+/* Do: Network, Sensors, Mode/State Update, then Outputs */
+
+/**
+ * Checks the NIC for a valid UDP packet. If one is present, it handles the
+ * 1 packet, replies, and returns.
+ */
+static void handle_network() {
   req_packet_t req = {0};
   memset(&req, 0, sizeof(req)); // TODO: Probably uneeded
   int rc = net_recv_request(&req);
@@ -103,12 +120,17 @@ void handle_network() {
     return;
   }
 
-  node_set_mode(&BRAKE, (node_mode_t)req.mode);
-  if (BRAKE.mode == kModeStandard) {
-    BRAKE.force_setpoint = req.arg0;
-    BRAKE.ref_press = req.arg1;
-  } else if (BRAKE.mode == kModeManual) {
-    BRAKE.override_state = (brake_valve_state_t)req.arg0;
+  node_mode_t new_mode;
+  rc = node_validate_mode(req.mode, &new_mode);
+
+  if (rc == 0) {
+    node_set_mode(&BRAKE, (node_mode_t)req.mode);
+    if (BRAKE.mode == kModeStandard) {
+      BRAKE.force_setpoint = req.arg0;
+      BRAKE.ref_press = req.arg1;
+    } else if (BRAKE.mode == kModeManual) {
+      BRAKE.override_state = (brake_valve_state_t)req.arg0;
+    }
   }
 
   resp_packet_t response;
@@ -128,7 +150,10 @@ void handle_network() {
   assert(rc == 1);
 }
 
-void read_sensors() {
+/**
+ * Reads all the sensors registered in the global node_t
+ */
+static void read_sensors() {
   int i = 0;
   while (BRAKE.sensors[i]) {
     sensor_read(BRAKE.sensors[i]);
@@ -136,18 +161,27 @@ void read_sensors() {
   }
 }
 
-void update_states() {
+/**
+ * Performs any misc state updates with the new sensor data before computing
+ * and applying outputs
+ */
+static void update_states() {
   if (BRAKE.mode == kModeStandard) {
+    // If the master hasn't contacted us in a while, Set Emergency
     if (BRAKE.last_message - millis() > MESSAGE_TIMEOUT) {
       BRAKE.mode = kModeEmergency;
     }
   } else if (BRAKE.mode == kModeReset) {
+    // If reset requested, ensure the piston is empty, and then timeout
     if (BRAKE.piston_press.val < PISTON_EMPTY_THRESH) {
-      delay(100); // hit watchdog timer
+      delay(WATCHDOG_TIMEOUT * 2); // hit watchdog timer
     }
   }
 }
 
+/**
+ * The algorithm for applying brakes while the module is in standard mode
+ */
 static void brake_standard_mode() {
   int32_t current_force = calculate_current_force();
   int32_t desired_force = BRAKE.force_setpoint;
@@ -162,6 +196,7 @@ static void brake_standard_mode() {
   // TODO: Deal with position of pad.
   // (Ensure that position front and back indicated pad is extended)
   brake_valve_state_t new_state = BRAKE.valve.state;
+
   if (abs(err) <= FORCE_SETPOINT_THRESH) {
     // Within Acceptable Range
     new_state = kBrakeValveClosed;
@@ -178,9 +213,11 @@ static void brake_standard_mode() {
   }
 }
 
-void output_actuators() {
+/**
+ * Compute and apply outputs based on the current mode of the node
+ */
+static void output_actuators() {
   switch (BRAKE.mode) {
-    ;
   case kModeStandard:
     brake_standard_mode();
     break;
@@ -203,7 +240,11 @@ void output_actuators() {
     abort();
   }
 }
-void read_serial() {
+
+/**
+ * Check if there is data avalable on the serial bus, if so handle it
+ */
+static void read_serial() {
   if (Serial.available() > 0) {
     // read the incoming byte:
     uint8_t incomingByte = Serial.read();
@@ -215,17 +256,21 @@ void read_serial() {
     debug(BRAKE.mode);
   }
 }
+
 /////////////////////// SETUP & LOOP /////////////////////
 
 void setup() {
 #ifdef ARDUINO_SAMD_ZERO
   // 1 second startup watchdog
-  Watchdog.enable(1000);
+  Watchdog.enable(STARTUP_WATCHDOG);
 #endif
-  Serial.begin(9600);
 
+  Serial.begin(SERIAL_BAUD);
+
+#ifdef BOOT_DELAY
   Serial.print("Waiting for Serial Connection\n");
-  delay(1000);
+  delay(BOOT_DELAY);
+#endif
 
   // Initial Mode
   BRAKE.mode = kModeInit;
@@ -242,6 +287,16 @@ void setup() {
   sensor_init(&BRAKE.tank_press, (char *)"tank_press", 0, _press_sensor);
   sensor_init(&BRAKE.piston_press, (char *)"piston_press", 0, _press_sensor);
 
+  // Register the sensors into the appropriate locations in the sensor array
+  assert(node_add_sensor(&BRAKE, &BRAKE.dist_front) == 0);
+  assert(node_add_sensor(&BRAKE, &BRAKE.dist_rear) == 0);
+
+  assert(node_add_sensor(&BRAKE, &BRAKE.temp_front) == 0);
+  assert(node_add_sensor(&BRAKE, &BRAKE.temp_rear) == 0);
+
+  assert(node_add_sensor(&BRAKE, &BRAKE.tank_press) == 0);
+  assert(node_add_sensor(&BRAKE, &BRAKE.piston_press) == 0);
+
   // Configure the brake valve
   brake_valve_init(&BRAKE.valve, 1, 2);
 
@@ -257,7 +312,7 @@ void setup() {
   // 100ms watchdog.  Auto Reset on hang
   info("Setting WatchDog to 100 -> End info output");
   Watchdog.disable();
-  Watchdog.enable(100);
+  Watchdog.enable(WATCHDOG_TIMEOUT);
 #endif
 }
 
@@ -288,5 +343,4 @@ void loop() {
   debug("Completed Loop");
   debug(BRAKE.mode);
   debug(BRAKE.valve.state);
-  delay(10);
 }

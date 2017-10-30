@@ -6,13 +6,13 @@
 #include <assert.h>
 
 /////////////////////// DEBUG /////////////////////
-#ifdef DEBUG
+#ifndef DEBUG
 
-#else
 #undef assert
 #define assert(x, ...)
 #endif
 
 #define APPLY_MASK(buf, mask) (buf) | (mask)
 #define REMOVE_MASK(buf, mask) (buf) &= ~(mask)
+
 #endif

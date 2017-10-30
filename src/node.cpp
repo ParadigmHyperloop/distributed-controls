@@ -1,14 +1,21 @@
 #include "node.h"
 
-void add_sensor(node_t *n, sensor_t *s) {
-  assert(n);
-  assert(s);
-  assert(n->sensors[s->channel] == NULL);
-  n->sensors[s->channel] = s;
+int node_add_sensor(node_t *n, sensor_t *s) {
+  if (n && s && n->sensors[s->channel] == NULL) {
+    n->sensors[s->channel] = s;
+    return 0;
+  }
+  return -1;
 }
 
-void node_set_mode(node_t *n, node_mode_t new_mode) {
+void node_set_mode(node_t *n, node_mode_t new_mode) { n->mode = new_mode; }
+
+int node_validate_mode(int new_mode, node_mode_t *out) {
   if (new_mode >= 0 && new_mode < N_MODES) {
-    n->mode = new_mode;
+    if (out) {
+      *out = (node_mode_t)new_mode;
+    }
+    return 0;
   }
+  return -1;
 }
