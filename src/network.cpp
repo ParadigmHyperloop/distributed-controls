@@ -26,14 +26,13 @@ int net_recv_request(req_packet_t *pkt) {
     Udp.read((uint8_t *)pkt, sizeof(req_packet_t));
     debug("Contents:");
     debug((char *)pkt);
-
   }
   return (packetSize == sizeof(req_packet_t) ? 1 : 0);
 }
 
 int net_send_response(resp_packet_t *pkt) {
   debug("Sending Response: ");
-  debug((char*)pkt);
+  debug((char *)pkt);
   // send a reply to the IP address and port that sent us the packet we
   // received
   Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
@@ -43,10 +42,10 @@ int net_send_response(resp_packet_t *pkt) {
 }
 
 int net_setup(void) {
-    // start the Ethernet and UDP:
-    debug("Ethernet.begin");
-    Ethernet.begin(mac, ip);
-    debug("Udp.begin");
-    Udp.begin(localPort);
-    return 0;
+  // start the Ethernet and UDP:
+  debug("Ethernet.begin");
+  Ethernet.begin(mac, ip);
+  debug("Udp.begin");
+  Udp.begin(localPort);
+  return 0;
 }

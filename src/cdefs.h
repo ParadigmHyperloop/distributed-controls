@@ -13,7 +13,6 @@
 #define assert(x, ...)
 #endif
 
-
 #define APPLY_MASK(buf, mask) (buf) | (mask)
 #define REMOVE_MASK(buf, mask) (buf) &= ~(mask)
 #endif

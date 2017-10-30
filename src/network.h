@@ -18,24 +18,24 @@
  * how to interpret arg0 and arg1
  */
 typedef struct req_packet {
-  uint8_t mode;  // Mode to set node to
-  int32_t arg0;  // First 32 bit Ardument
-  int32_t arg1;  // Second 32 bit Argument
+  uint8_t mode; // Mode to set node to
+  int32_t arg0; // First 32 bit Ardument
+  int32_t arg1; // Second 32 bit Argument
 } req_packet_t;
 
 /**
  * Represents a v0.1 Pod Bus response Packet for brake modules
  */
 typedef struct resp_packet {
-  uint8_t mode; // The current mode the node is in
-  int32_t tank_press; // Pressure in the tank
-  int32_t piston_press; // Pressure in the piston
-  int32_t dist_front; // Front pad distance sensor
-  int32_t dist_rear; // Rear pad distance sensor
-  int32_t valve_state; // State of the valve
-  int32_t temp_front; // Temp on the front of the pad
-  int32_t temp_rear;  // Temp on the rear of the pad
-  int32_t force_setpoint;  // Current force setpoint
+  uint8_t mode;           // The current mode the node is in
+  int32_t tank_press;     // Pressure in the tank
+  int32_t piston_press;   // Pressure in the piston
+  int32_t dist_front;     // Front pad distance sensor
+  int32_t dist_rear;      // Rear pad distance sensor
+  int32_t valve_state;    // State of the valve
+  int32_t temp_front;     // Temp on the front of the pad
+  int32_t temp_rear;      // Temp on the rear of the pad
+  int32_t force_setpoint; // Current force setpoint
 } resp_packet_t;
 
 /**
@@ -48,10 +48,10 @@ int net_recv_request(req_packet_t *pkt);
 /**
  * Send the given response packet to the sender
  *
- * @return number of packets sent (-1 failure, 0 for invalid packet, 1 for success)
+ * @return number of packets sent (-1 failure, 0 for invalid packet, 1 for
+ * success)
  */
 int net_send_response(resp_packet_t *pkt);
-
 
 /**
  * Setup the "networking interface" for communications.  This networking API

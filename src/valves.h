@@ -36,8 +36,8 @@ typedef enum brake_valve_state {
 /* Abstraction of a 5/3 solenoid valve */
 typedef struct brake_valve {
   brake_valve_state_t state; // The current state of the valve
-  int engage_pin; // GPIO pin for the release coil
-  int release_pin; // GPIO pin for the release coil
+  int engage_pin;            // GPIO pin for the release coil
+  int release_pin;           // GPIO pin for the release coil
   uint32_t last_update; // Timestamp of last time the brake state was changed
 } brake_valve_t;
 

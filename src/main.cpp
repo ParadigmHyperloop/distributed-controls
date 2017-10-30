@@ -38,10 +38,10 @@
  */
 
 /////////////////////// HEADERS /////////////////////
-#include <Arduino.h>
 #include "config.h"
 #include "network.h"
 #include "node.h"
+#include <Arduino.h>
 
 #ifdef ARDUINO_SAMD_ZERO
 #include <Adafruit_ASFcore.h>
@@ -89,7 +89,6 @@ int32_t calculate_current_force() {
 
   return POUND_FORCE_TO_NEWTONS(force_pounds);
 }
-
 
 /////////////////////// CORE CONTROLLER STEPS /////////////////////
 /* Do: Network, Sensors, State, then Outputs */
@@ -180,27 +179,28 @@ static void brake_standard_mode() {
 }
 
 void output_actuators() {
-  switch (BRAKE.mode) {;
-    case kModeStandard:
-      brake_standard_mode();
-      break;
-    case kModeManual:
-      brake_valve_set(&BRAKE.valve, BRAKE.override_state);
-      break;
-    case kModeInit:
-    case kModeInhibit:
-    case kModeReset:
-    case kModeTest:
-    case kModeProgram:
-      // No Actiuations are allowed
-      brake_valve_set(&BRAKE.valve, kBrakeValveReleased);
-      break;
-    case kModeEmergency:
-      brake_valve_set(&BRAKE.valve, kBrakeValveEngaged);
-      // NOTE: if packet arrives from controller, the emergency is lifted.
-      break;
-    default:
-      abort();
+  switch (BRAKE.mode) {
+    ;
+  case kModeStandard:
+    brake_standard_mode();
+    break;
+  case kModeManual:
+    brake_valve_set(&BRAKE.valve, BRAKE.override_state);
+    break;
+  case kModeInit:
+  case kModeInhibit:
+  case kModeReset:
+  case kModeTest:
+  case kModeProgram:
+    // No Actiuations are allowed
+    brake_valve_set(&BRAKE.valve, kBrakeValveReleased);
+    break;
+  case kModeEmergency:
+    brake_valve_set(&BRAKE.valve, kBrakeValveEngaged);
+    // NOTE: if packet arrives from controller, the emergency is lifted.
+    break;
+  default:
+    abort();
   }
 }
 void read_serial() {

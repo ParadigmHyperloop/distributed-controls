@@ -9,7 +9,6 @@
 #define SENSOR_FAULT_VARIANCE 0x4
 #define SENSOR_FAULT_HW 0x8
 
-
 #define SENSOR_SET_HIGH(s) APPLY_MASK(s->stat, SENSOR_FAULT_HIGH)
 #define SENSOR_CLEAR_HIGH(s) REMOVE_MASK(s->stat, SENSOR_FAULT_HIGH)
 
@@ -113,9 +112,7 @@ int sensor_read(sensor_t *s);
  *
  * @return 0 if the sensor is OK, otherwise an error code
  */
-inline int sensor_valid(sensor_t *s) {
-  return s->stat;
-}
+inline int sensor_valid(sensor_t *s) { return s->stat; }
 
 /**
  * Gets the current reading of the sensor

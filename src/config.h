@@ -1,7 +1,7 @@
 #ifndef PARADIGM_CONFIG_H
 #define PARADIGM_CONFIG_H
-#include "cdefs.h"
 #include "board.h"
+#include "cdefs.h"
 
 /////////////////////// NETWORK /////////////////////
 
@@ -35,34 +35,36 @@
 #define SENSOR_COUNT_INIT 0x0F // Require 15 samples before readings are valid
 
 #ifdef DEBUG
-#define debug(...) do { \
-  Serial.print("[DEBUG] ["); \
-  Serial.print(__FUNCTION__); \
-  Serial.print(" in "); \
-  Serial.print(__FILE__); \
-  Serial.print(":"); \
-  Serial.print(__LINE__, DEC); \
-  Serial.print("] "); \
-  Serial.print(__VA_ARGS__); \
-  Serial.print("\n"); \
-  Serial.flush(); \
-} while (0);
+#define debug(...)                                                             \
+  do {                                                                         \
+    Serial.print("[DEBUG] [");                                                 \
+    Serial.print(__FUNCTION__);                                                \
+    Serial.print(" in ");                                                      \
+    Serial.print(__FILE__);                                                    \
+    Serial.print(":");                                                         \
+    Serial.print(__LINE__, DEC);                                               \
+    Serial.print("] ");                                                        \
+    Serial.print(__VA_ARGS__);                                                 \
+    Serial.print("\n");                                                        \
+    Serial.flush();                                                            \
+  } while (0);
 #else
 #define debug(...)
 #endif
 
 // TODO Absract these
-#define info(...) do { \
-  Serial.print("[INFO] ["); \
-  Serial.print(__FUNCTION__); \
-  Serial.print(" in "); \
-  Serial.print(__FILE__); \
-  Serial.print(":"); \
-  Serial.print(__LINE__, DEC); \
-  Serial.print("] "); \
-  Serial.print(__VA_ARGS__); \
-  Serial.print("\n"); \
-  Serial.flush(); \
-} while (0);
+#define info(...)                                                              \
+  do {                                                                         \
+    Serial.print("[INFO] [");                                                  \
+    Serial.print(__FUNCTION__);                                                \
+    Serial.print(" in ");                                                      \
+    Serial.print(__FILE__);                                                    \
+    Serial.print(":");                                                         \
+    Serial.print(__LINE__, DEC);                                               \
+    Serial.print("] ");                                                        \
+    Serial.print(__VA_ARGS__);                                                 \
+    Serial.print("\n");                                                        \
+    Serial.flush();                                                            \
+  } while (0);
 
 #endif
