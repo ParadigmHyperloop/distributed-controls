@@ -36,6 +36,11 @@ Now for the fun part, grab an arduino nano (Also supports M0's you will need to 
 [DEBUG] [loop in src\main.cpp:283] --- Starting Actuators
 ```
 
+# Main Loop
+
+The main loop of the controller is fairly straitforward.  The following diagram might
+be useful.
+![Main Loop](https://user-images.githubusercontent.com/1410448/33865849-7fc6f698-dec1-11e7-9a94-bc9e728b2d72.png)
 
 # Dev Notes
 
