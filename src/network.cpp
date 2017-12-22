@@ -3,10 +3,12 @@
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
-byte mac[6] = {MAC_ADDRESS};
-IPAddress ip(IP_ADDRESS);
+byte mac[] = {
+  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+};
+IPAddress ip(192, 168, 0, 91);
 
-unsigned int localPort = LISTEN_PORT; // local port to listen on
+unsigned int localPort = 8888;      // local port to listen on
 
 // buffers for receiving and sending data
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; // buffer to hold incoming packet,
@@ -22,6 +24,17 @@ int net_recv_request(req_packet_t *pkt) {
   if (packetSize) {
     debug("Received packet of size ");
     debug(packetSize);
+    IPAddress remote = Udp.remoteIP();
+    for (int i = 0; i < 4; i++)
+    {
+      SerialUSB.print(remote[i], DEC);
+      if (i < 3)
+      {
+        SerialUSB.print(".");
+      }
+    }
+    SerialUSB.print(", port ");
+    SerialUSB.println(Udp.remotePort());
 
     Udp.read((uint8_t *)pkt, sizeof(req_packet_t));
     debug("Contents:");
@@ -42,10 +55,9 @@ int net_send_response(resp_packet_t *pkt) {
 }
 
 int net_setup(void) {
-  // start the Ethernet and UDP:
-  debug("Ethernet.begin");
+  // start the Ethernet and UDP
   Ethernet.begin(mac, ip);
-  debug("Udp.begin");
   Udp.begin(localPort);
+
   return 0;
 }

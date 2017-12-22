@@ -23,14 +23,14 @@ Now for the fun part, grab an arduino nano (Also supports M0's you will need to 
 
 1. Plug in the arduino
 2. Click the Upload button to build and upload to the arduino
-3. Click the Serial Console button (looks like a wall plug), it should autodetect the port, click start
-4. The serial console will start spewing `debug()` output
+3. Click the SerialUSB Console button (looks like a wall plug), it should autodetect the port, click start
+4. The SerialUSB console will start spewing `debug()` output
 
 ```
 [DEBUG] [loop in src\main.cpp:268] --- Starting Network
 [DEBUG] [net_recv_request in src\network.cpp:19] Requesting Packet
 [DEBUG] [net_recv_request in src\network.cpp:21] Packet Back
-[DEBUG] [loop in src\main.cpp:272] --- Read Serial
+[DEBUG] [loop in src\main.cpp:272] --- Read SerialUSB
 [DEBUG] [loop in src\main.cpp:275] --- Starting Sensors
 [DEBUG] [loop in src\main.cpp:279] --- Starting States
 [DEBUG] [loop in src\main.cpp:283] --- Starting Actuators

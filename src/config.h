@@ -10,7 +10,7 @@
 #endif
 
 #ifndef IP_ADDRESS
-#define IP_ADDRESS 192, 168, 1, 177
+#define IP_ADDRESS 192, 168, 0, 90
 #endif
 
 #ifndef LISTEN_PORT
@@ -31,13 +31,12 @@
 #define WATCHDOG_TIMEOUT 100 // milliseconds
 /* The watchdog for the setup function */
 #define STARTUP_WATCHDOG 4000 // milliseconds
-/* The Serial Baud Rate. Note this strongly affects the watchdog timers */
-#define SERIAL_BAUD 9600 // Baud
+/* The SerialUSB Baud Rate. Note this strongly affects the watchdog timers */
+#define SerialUSB_BAUD 9600 // Baud
 
-#ifdef DEBUG
-/* The delay to allow a serial client to connect for debug logging */
+
+/* The delay to allow a SerialUSB client to connect for debug logging */
 #define BOOT_DELAY 1000 // milliseconds
-#endif
 
 #if STARTUP_WATCHDOG < BOOT_DELAY + BOOT_DELAY + 1000
 #error "STARTUP_WATCHDOG should be increased or BOOT_DELAY decreased"
@@ -56,18 +55,21 @@
 
 #define output(type, ...)                                                      \
   do {                                                                         \
-    Serial.print("[");                                                         \
-    Serial.print((type));                                                      \
-    Serial.print("] [");                                                       \
-    Serial.print(__FUNCTION__);                                                \
-    Serial.print(" in ");                                                      \
-    Serial.print(__FILE__);                                                    \
-    Serial.print(":");                                                         \
-    Serial.print(__LINE__, DEC);                                               \
-    Serial.print("] ");                                                        \
-    Serial.print(__VA_ARGS__);                                                 \
-    Serial.print("\n");                                                        \
-    Serial.flush();                                                            \
+    SerialUSB.print("[");                                                         \
+    SerialUSB.print(millis());                                                    \
+    SerialUSB.print("] ");                                                        \
+    SerialUSB.print("[");                                                         \
+    SerialUSB.print((type));                                                      \
+    SerialUSB.print("] [");                                                       \
+    SerialUSB.print(__FUNCTION__);                                                \
+    SerialUSB.print(" in ");                                                      \
+    SerialUSB.print(__FILE__);                                                    \
+    SerialUSB.print(":");                                                         \
+    SerialUSB.print(__LINE__, DEC);                                               \
+    SerialUSB.print("] ");                                                        \
+    SerialUSB.print(__VA_ARGS__);                                                 \
+    SerialUSB.print("\n");                                                        \
+    SerialUSB.flush();                                                            \
   } while (0);
 
 #ifdef DEBUG

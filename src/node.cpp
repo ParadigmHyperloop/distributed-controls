@@ -1,9 +1,14 @@
 #include "node.h"
 
 int node_add_sensor(node_t *n, sensor_t *s) {
-  if (n && s && n->sensors[s->channel] == NULL) {
-    n->sensors[s->channel] = s;
-    return 0;
+  if (n && s) {
+    if (n->sensors[s->channel] == NULL) {
+      n->sensors[s->channel] = s;
+      return 0;
+    } else {
+      error("Attempted to add sensor to node but channel was occupied");
+    }
+
   }
   return -1;
 }

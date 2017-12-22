@@ -30,7 +30,7 @@
  *    - Determine if a MAC can be burned into the NIC once during assembly
  *        -> Then we could avoid compile time and use DHCP.
  *    - Determine if a default MAC is already burned into the NIC
- *    - Determine if we can generate a unique MAC based on the uC serial #
+ *    - Determine if we can generate a unique MAC based on the uC SerialUSB #
  *
  * DESIGN:
  * See the infamous KeynoteCAD for design notes on the design of this Prototype
@@ -242,12 +242,12 @@ static void output_actuators() {
 }
 
 /**
- * Check if there is data avalable on the serial bus, if so handle it
+ * Check if there is data avalable on the SerialUSB bus, if so handle it
  */
-static void read_serial() {
-  if (Serial.available() > 0) {
+static void read_SerialUSB() {
+  if (SerialUSB.available() > 0) {
     // read the incoming byte:
-    uint8_t incomingByte = Serial.read();
+    uint8_t incomingByte = SerialUSB.read();
     debug("Old Mode:");
     debug(BRAKE.mode);
     uint8_t mode = incomingByte - '0';
@@ -260,32 +260,39 @@ static void read_serial() {
 /////////////////////// SETUP & LOOP /////////////////////
 
 void setup() {
+#ifdef ENABLE_WATCHDOG
 #ifdef ARDUINO_SAMD_ZERO
   // 1 second startup watchdog
   Watchdog.enable(STARTUP_WATCHDOG);
 #endif
+#endif
 
-  Serial.begin(SERIAL_BAUD);
+  net_setup();
+
+  SerialUSB.begin(SerialUSB_BAUD);
 
 #ifdef BOOT_DELAY
-  Serial.print("Waiting for Serial Connection\n");
-  delay(BOOT_DELAY);
+  while (!SerialUSB) {
+    ; // Waiting for SerialUSB Connection
+  }
+  info("SerialUSB Connected!");
 #endif
 
   // Initial Mode
   BRAKE.mode = kModeInit;
 
-  info("Configuring Sensors\n");
-
+  info("Configuring Sensors");
+  info("pkt size is: ");
+  info(sizeof(req_packet_t));
   // Setup Sensors
   sensor_init(&BRAKE.dist_front, (char *)"dist_front", 0, _dist_sensor);
-  sensor_init(&BRAKE.dist_rear, (char *)"dist_rear", 0, _dist_sensor);
+  sensor_init(&BRAKE.dist_rear, (char *)"dist_rear", 1, _dist_sensor);
 
-  sensor_init(&BRAKE.temp_front, (char *)"temp_front", 0, _temp_sensor);
-  sensor_init(&BRAKE.temp_rear, (char *)"temp_rear", 0, _temp_sensor);
+  sensor_init(&BRAKE.temp_front, (char *)"temp_front", 2, _temp_sensor);
+  sensor_init(&BRAKE.temp_rear, (char *)"temp_rear", 3, _temp_sensor);
 
-  sensor_init(&BRAKE.tank_press, (char *)"tank_press", 0, _press_sensor);
-  sensor_init(&BRAKE.piston_press, (char *)"piston_press", 0, _press_sensor);
+  sensor_init(&BRAKE.tank_press, (char *)"tank_press", 4, _press_sensor);
+  sensor_init(&BRAKE.piston_press, (char *)"piston_press", 5, _press_sensor);
 
   // Register the sensors into the appropriate locations in the sensor array
   assert(node_add_sensor(&BRAKE, &BRAKE.dist_front) == 0);
@@ -306,26 +313,29 @@ void setup() {
   info(BRAKE.last_message);
 
   info("Network Setup");
-  net_setup();
   info("Network Setup Done!");
+#ifdef ENABLE_WATCHDOG
 #ifdef ARDUINO_SAMD_ZERO
   // 100ms watchdog.  Auto Reset on hang
   info("Setting WatchDog to 100 -> End info output");
   Watchdog.disable();
   Watchdog.enable(WATCHDOG_TIMEOUT);
 #endif
+#endif
 }
 
 void loop() {
+#ifdef ENABLE_WATCHDOG
 #ifdef ARDUINO_SAMD_ZERO
   Watchdog.reset();
+#endif
 #endif
   debug("--- Starting Network");
   // if there's data available, read a packet
   handle_network();
 
-  debug("--- Read Serial");
-  read_serial();
+  debug("--- Read SerialUSB");
+  read_SerialUSB();
 
   debug("--- Starting Sensors");
   // Read in and update sensors
@@ -343,4 +353,5 @@ void loop() {
   debug("Completed Loop");
   debug(BRAKE.mode);
   debug(BRAKE.valve.state);
+  delay(10);
 }

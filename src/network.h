@@ -3,8 +3,8 @@
 
 #include "cdefs.h"
 #include "config.h"
-#include <Ethernet.h>
-#include <EthernetUdp.h> // UDP library from: bjoern@cs.stanford.edu 12/30/2008
+#include <Ethernet2.h>
+#include <EthernetUdp2.h> // UDP library from: bjoern@cs.stanford.edu 12/30/2008
 #include <SPI.h>         // needed for Arduino versions later than 0018
 
 /////////////////////// NETWORK PACKETS /////////////////////
