@@ -38,320 +38,160 @@
  */
 
 /////////////////////// HEADERS /////////////////////
-#include "config.h"
-#include "network.h"
-#include "node.h"
 #include <Arduino.h>
+#include <sensor.h>
 
-#ifdef ARDUINO_SAMD_ZERO
-#include <Adafruit_ASFcore.h>
-#include <Adafruit_SleepyDog.h>
-#endif
+#include <filters/bias.h>
+#include <converters/cubic.h>
+#include <detectors/high_low.h>
 
-/////////////////////// CONVERTIONS /////////////////////
+#ifndef UNIT_TEST  // IMPORTANT LINE!
 
-#define POUND_FORCE_TO_NEWTONS(x) (445 * x) / 100
-#define BIAS(old_val, new_val, bias, total)                                    \
-  (((((old_val) * (bias) / (total)) +                                          \
-     ((new_val) * ((total) - (bias)) / (total)))) /                            \
-   (total))
+#define __TEST(cond, a, b) do { \
+  if (cond) { \
+    SerialUSB.print("[PASS] "); \
+    SerialUSB.print(__XSTR__(cond)); \
+    SerialUSB.print("\n"); \
+  } else { \
+    SerialUSB.print("[FAIL] "); \
+    SerialUSB.print(__XSTR__(cond)); \
+    SerialUSB.print(" actual lhs:"); \
+    SerialUSB.print(a); \
+    SerialUSB.print(" rhs:"); \
+    SerialUSB.print(b); \
+    SerialUSB.print("\n"); \
+    abort(); \
+  } \
+} while (0);
 
-/////////////////////// GLOBAL STATE STORAGE /////////////////////
+#define TEST_ASSERT_EQUAL(a, b) __TEST((a) == (b), a, b)
 
-node_t BRAKE = {0};
+#define TEST_ASSERT_WITHIN(a, b, e) __TEST(((a) < (b + e) && (a) > (b - e)), a, b)
 
-/////////////////////// SENSOR CALIBRARION FUNCTIONS /////////////////////
+BiasFilter Fi(0.5);
+CubicConverter C(0,0,1,0);
+HighLowDetector D(8, 4086);
+Sensor S(1, &C, &Fi, &D);
 
-static int _dist_sensor(sensor_t *s) {
-  // Linear calibrarion function
-  uint32_t new_val = map(s->raw, 0, 4095, 220, 10); // Bullshit
-  // Low Pass Filter
-  s->val = BIAS(s->val, new_val, 0, 255);
-  return 0;
+void test_bias_filter() {
+  BiasFilter f1(0.5);
+  TEST_ASSERT_EQUAL(f1.getRiseTime(0.5), 1);
+  TEST_ASSERT_EQUAL(f1.getRiseTime(0.75), 2);
+  TEST_ASSERT_EQUAL(f1.getRiseTime(0.90), 4);
+  TEST_ASSERT_EQUAL(f1.getRiseTime(0.99), 7);
+
+  TEST_ASSERT_EQUAL(f1.filter(1000), 500);
+  TEST_ASSERT_EQUAL(f1.filter(1000), 750);
+  TEST_ASSERT_EQUAL(f1.filter(0), 375);
+  TEST_ASSERT_EQUAL(f1.filter(0), 187.5);
+
+  f1.reset();
+  TEST_ASSERT_EQUAL(f1.filter(4095), 2047.5);
+
+  BiasFilter f2(1.0);
+  TEST_ASSERT_EQUAL(f2.getRiseTime(0.5), 0);
+  TEST_ASSERT_EQUAL(f2.getRiseTime(0.75), 0);
+  TEST_ASSERT_EQUAL(f2.getRiseTime(0.90), 0);
+  TEST_ASSERT_EQUAL(f2.getRiseTime(0.99), 0);
+
+  BiasFilter f3(0.001);
+  TEST_ASSERT_EQUAL(f3.getRiseTime(0.5), 693);
+  TEST_ASSERT_EQUAL(f3.getRiseTime(0.75), 1386);
+  TEST_ASSERT_EQUAL(f3.getRiseTime(0.90), 2302);
+  TEST_ASSERT_EQUAL(f3.getRiseTime(0.99), 4603);
+
+  BiasFilter f4(0.25);
+  TEST_ASSERT_EQUAL(f4.getRiseTime(0.5), 3);
+  TEST_ASSERT_EQUAL(f4.getRiseTime(0.75), 5);
+  TEST_ASSERT_EQUAL(f4.getRiseTime(0.90), 9);
+  TEST_ASSERT_EQUAL(f4.getRiseTime(0.99), 17);
+
+  TEST_ASSERT_EQUAL(f4.filter(1000), 250);
+  TEST_ASSERT_EQUAL(f4.filter(1000), 437.5);
+  TEST_ASSERT_EQUAL(f4.filter(1000), 578.125);
+
+  f4.reset();
+  TEST_ASSERT_EQUAL(f4.filter(100), 25);
 }
 
-static int _temp_sensor(sensor_t *s) {
-  // Linear calibrarion function
-  uint32_t new_val = map(s->raw, 0, 4095, 220, 10); // Bullshit
-  // Low Pass Filter
-  s->val = BIAS(s->val, new_val, 0, 255);
-  return 0;
+void test_cubic_converter() {
+  CubicConverter c1(0,0,1,0);
+  TEST_ASSERT_EQUAL(c1.convert(0.0), 0.0);
+  TEST_ASSERT_EQUAL(c1.convert(0.5), 0.5);
+  TEST_ASSERT_EQUAL(c1.convert(-120.0), -120.0);
+  TEST_ASSERT_EQUAL(c1.convert(0.0), 0.0);
+  TEST_ASSERT_EQUAL(c1.convert(888888.0), 888888.0);
+
+  CubicConverter c2(0,0,1,5.5);
+  TEST_ASSERT_EQUAL(c2.convert(0.0), 5.5);
+  TEST_ASSERT_EQUAL(c2.convert(0.5), 6.0);
+  TEST_ASSERT_EQUAL(c2.convert(-120.0), -114.5);
+  TEST_ASSERT_EQUAL(c2.convert(0.0), 5.5);
+  TEST_ASSERT_EQUAL(c2.convert(888888.0), 888893.5);
+
+  CubicConverter c3(0.1,0.2,0.3,1.0);
+  TEST_ASSERT_EQUAL(c3.convert(0.0), 1.0);
+  // accrues floating point error (1.60 != 1.60)
+  TEST_ASSERT_WITHIN(c3.convert(1.0), 1.60, 0.0001);
+  TEST_ASSERT_WITHIN(c3.convert(-1), 0.8, 0.0001);
 }
 
-static int _press_sensor(sensor_t *s) {
-  // Linear calibrarion function
-  uint32_t new_val = map(s->raw, 0, 4095, 220, 10); // Bullshit
-  // Low Pass Filter
-  s->val = BIAS(s->val, new_val, 0, 255);
-  return 0;
+void test_high_low_detector() {
+  HighLowDetector d1(8, 4086);
+  TEST_ASSERT_EQUAL(d1.check(0), SENSOR_FAULT_LOW);
+  TEST_ASSERT_EQUAL(d1.check(4095), SENSOR_FAULT_HIGH);
+  TEST_ASSERT_EQUAL(d1.check(2000), 0x0);
 }
 
-/////////////////////// CONTROLLER UTILITIES /////////////////////
 
-/**
- * Calculates the force applied by the brakes using the current pressure in
- * the pistons.
- *
- * @return The Force in newtons
- */
-static int32_t calculate_current_force() {
-  int32_t relative_100s_psi = BRAKE.piston_press.val - BRAKE.ref_press;
+void test_sensor() {
+  CubicConverter c3(0.1,0.2,0.3,1.0);
+  BiasFilter f4(0.25);
+  HighLowDetector d1(8, 4086);
 
-  int32_t force_pounds = (relative_100s_psi * PISTON_AREA) / 100;
+  Sensor s1(10, &c3, &f4, &d1);
 
-  return POUND_FORCE_TO_NEWTONS(force_pounds);
+  TEST_ASSERT_EQUAL(s1.getChannel(), 10);
+  TEST_ASSERT_EQUAL(s1.getValue(), 0.0);
+
+  TEST_ASSERT_EQUAL(s1.isValid(), false);
+  TEST_ASSERT_EQUAL(s1.hasFaultLow(), false);
+  TEST_ASSERT_EQUAL(s1.hasFaultHigh(), false);
+  TEST_ASSERT_EQUAL(s1.hasFaultVariance(), false);
+  TEST_ASSERT_EQUAL(s1.hasFaultHW(), false);
+  TEST_ASSERT_EQUAL(s1.hasRisen(), false);
 }
 
-/////////////////////// CORE CONTROLLER STEPS /////////////////////
-
-/* Do: Network, Sensors, Mode/State Update, then Outputs */
-
-/**
- * Checks the NIC for a valid UDP packet. If one is present, it handles the
- * 1 packet, replies, and returns.
- */
-static void handle_network() {
-  req_packet_t req = {0};
-  memset(&req, 0, sizeof(req)); // TODO: Probably uneeded
-  int rc = net_recv_request(&req);
-
-  // is there a packet recieved
-  if (rc == 0) {
-    return;
-  }
-
-  node_mode_t new_mode;
-  rc = node_validate_mode(req.mode, &new_mode);
-
-  if (rc == 0) {
-    node_set_mode(&BRAKE, (node_mode_t)req.mode);
-    if (BRAKE.mode == kModeStandard) {
-      BRAKE.force_setpoint = req.arg0;
-      BRAKE.ref_press = req.arg1;
-    } else if (BRAKE.mode == kModeManual) {
-      BRAKE.override_state = (brake_valve_state_t)req.arg0;
-    }
-  }
-
-  resp_packet_t response;
-  memset(&response, 0, sizeof(response)); // TODO: Probably uneeded
-
-  response.mode = BRAKE.mode;
-  response.tank_press = BRAKE.tank_press.val;
-  response.piston_press = BRAKE.piston_press.val;
-  response.dist_front = BRAKE.dist_front.val;
-  response.dist_rear = BRAKE.dist_rear.val;
-  response.valve_state = BRAKE.valve.state;
-  response.temp_front = BRAKE.temp_front.val;
-  response.temp_rear = BRAKE.temp_rear.val;
-  response.force_setpoint = BRAKE.force_setpoint;
-
-  rc = net_send_response(&response);
-  assert(rc == 1);
+void test() {
+  test_high_low_detector();
+  test_bias_filter();
+  test_cubic_converter();
+  test_sensor();
 }
-
-/**
- * Reads all the sensors registered in the global node_t
- */
-static void read_sensors() {
-  int i = 0;
-  while (BRAKE.sensors[i]) {
-    sensor_read(BRAKE.sensors[i]);
-    i++;
-  }
-}
-
-/**
- * Performs any misc state updates with the new sensor data before computing
- * and applying outputs
- */
-static void update_states() {
-  if (BRAKE.mode == kModeStandard) {
-    // If the master hasn't contacted us in a while, Set Emergency
-    if (BRAKE.last_message - millis() > MESSAGE_TIMEOUT) {
-      BRAKE.mode = kModeEmergency;
-    }
-  } else if (BRAKE.mode == kModeReset) {
-    // If reset requested, ensure the piston is empty, and then timeout
-    if (BRAKE.piston_press.val < PISTON_EMPTY_THRESH) {
-      delay(WATCHDOG_TIMEOUT * 2); // hit watchdog timer
-    }
-  }
-}
-
-/**
- * The algorithm for applying brakes while the module is in standard mode
- */
-static void brake_standard_mode() {
-  int32_t current_force = calculate_current_force();
-  int32_t desired_force = BRAKE.force_setpoint;
-  int32_t err = desired_force - current_force;
-
-  // TODO: Deal with situations when tank pressure is getting low
-  // (disallow release until controller sets force_setpoint <= 0)
-
-  // TODO: Deal with overtemp situations?
-  // (actually we probably don't want to actively control based on temp)
-
-  // TODO: Deal with position of pad.
-  // (Ensure that position front and back indicated pad is extended)
-  brake_valve_state_t new_state = BRAKE.valve.state;
-
-  if (abs(err) <= FORCE_SETPOINT_THRESH) {
-    // Within Acceptable Range
-    new_state = kBrakeValveClosed;
-  } else if (err > 0) {
-    // Underpressed
-    new_state = kBrakeValveReleased;
-  } else if (err < 0) {
-    // Overpressed
-    new_state = kBrakeValveEngaged;
-  }
-
-  if (BRAKE.valve.state != new_state) {
-    brake_valve_set(&BRAKE.valve, new_state);
-  }
-}
-
-/**
- * Compute and apply outputs based on the current mode of the node
- */
-static void output_actuators() {
-  switch (BRAKE.mode) {
-  case kModeStandard:
-    brake_standard_mode();
-    break;
-  case kModeManual:
-    brake_valve_set(&BRAKE.valve, BRAKE.override_state);
-    break;
-  case kModeInit:
-  case kModeInhibit:
-  case kModeReset:
-  case kModeTest:
-  case kModeProgram:
-    // No Actiuations are allowed
-    brake_valve_set(&BRAKE.valve, kBrakeValveReleased);
-    break;
-  case kModeEmergency:
-    brake_valve_set(&BRAKE.valve, kBrakeValveEngaged);
-    // NOTE: if packet arrives from controller, the emergency is lifted.
-    break;
-  default:
-    abort();
-  }
-}
-
-/**
- * Check if there is data avalable on the SerialUSB bus, if so handle it
- */
-static void read_SerialUSB() {
-  if (SerialUSB.available() > 0) {
-    // read the incoming byte:
-    uint8_t incomingByte = SerialUSB.read();
-    debug("Old Mode:");
-    debug(BRAKE.mode);
-    uint8_t mode = incomingByte - '0';
-    node_set_mode(&BRAKE, (node_mode_t)mode);
-    debug("New Mode:");
-    debug(BRAKE.mode);
-  }
-}
-
-/////////////////////// SETUP & LOOP /////////////////////
 
 void setup() {
-#ifdef ENABLE_WATCHDOG
-#ifdef ARDUINO_SAMD_ZERO
-  // 1 second startup watchdog
-  Watchdog.enable(STARTUP_WATCHDOG);
-#endif
-#endif
+  SerialUSB.begin(115200);
 
-  net_setup();
-
-  SerialUSB.begin(SerialUSB_BAUD);
-
-#ifdef BOOT_DELAY
   while (!SerialUSB) {
     ; // Waiting for SerialUSB Connection
   }
   info("SerialUSB Connected!");
-#endif
-
-  // Initial Mode
-  BRAKE.mode = kModeInit;
-
-  info("Configuring Sensors");
-  info("pkt size is: ");
-  info(sizeof(req_packet_t));
-  // Setup Sensors
-  sensor_init(&BRAKE.dist_front, (char *)"dist_front", 0, _dist_sensor);
-  sensor_init(&BRAKE.dist_rear, (char *)"dist_rear", 1, _dist_sensor);
-
-  sensor_init(&BRAKE.temp_front, (char *)"temp_front", 2, _temp_sensor);
-  sensor_init(&BRAKE.temp_rear, (char *)"temp_rear", 3, _temp_sensor);
-
-  sensor_init(&BRAKE.tank_press, (char *)"tank_press", 4, _press_sensor);
-  sensor_init(&BRAKE.piston_press, (char *)"piston_press", 5, _press_sensor);
-
-  // Register the sensors into the appropriate locations in the sensor array
-  assert(node_add_sensor(&BRAKE, &BRAKE.dist_front) == 0);
-  assert(node_add_sensor(&BRAKE, &BRAKE.dist_rear) == 0);
-
-  assert(node_add_sensor(&BRAKE, &BRAKE.temp_front) == 0);
-  assert(node_add_sensor(&BRAKE, &BRAKE.temp_rear) == 0);
-
-  assert(node_add_sensor(&BRAKE, &BRAKE.tank_press) == 0);
-  assert(node_add_sensor(&BRAKE, &BRAKE.piston_press) == 0);
-
-  // Configure the brake valve
-  brake_valve_init(&BRAKE.valve, 1, 2);
-
-  // Set the UDP message timeout
-  BRAKE.last_message = millis();
-  info("Last Message Set to:");
-  info(BRAKE.last_message);
-
-  info("Network Setup");
-  info("Network Setup Done!");
-#ifdef ENABLE_WATCHDOG
-#ifdef ARDUINO_SAMD_ZERO
-  // 100ms watchdog.  Auto Reset on hang
-  info("Setting WatchDog to 100 -> End info output");
-  Watchdog.disable();
-  Watchdog.enable(WATCHDOG_TIMEOUT);
-#endif
-#endif
+  test();
+  info("==== ALL TESTS PASSED! ====");
 }
 
 void loop() {
-#ifdef ENABLE_WATCHDOG
-#ifdef ARDUINO_SAMD_ZERO
-  Watchdog.reset();
-#endif
-#endif
-  debug("--- Starting Network");
-  // if there's data available, read a packet
-  handle_network();
+  S.addValue(1000);
+  info(S.getValue());
 
-  debug("--- Read SerialUSB");
-  read_SerialUSB();
-
-  debug("--- Starting Sensors");
-  // Read in and update sensors
-  read_sensors();
-
-  debug("--- Starting States");
-  // Change controller mode if needed (network timeout, controller reset)
-  update_states();
-
-  debug("--- Starting Actuators");
-  // Outputs
-  output_actuators();
-
+  info("Completed Loop");
   // delay
-  debug("Completed Loop");
-  debug(BRAKE.mode);
-  debug(BRAKE.valve.state);
-  delay(10);
+  delay(1000);
 }
+
+
+#else
+///////////////////////////////////////////////////////////////////////////////
+///                                  TESTS
+///////////////////////////////////////////////////////////////////////////////
+#endif
