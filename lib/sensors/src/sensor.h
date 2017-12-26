@@ -37,12 +37,17 @@ class Sensor {
     ~Sensor(){}
 
     void addValue (uint32_t new_value) {
-      bool is_fault = detector->check(new_value);
-      float filtered = filter->filter(new_value);
+      flags = detector->check(new_value);
 
-      value = converter->convert(filtered);
+      if (!hasFaults()) {
+        float filtered = filter->filter(new_value);
 
-      samples++;
+        value = converter->convert(filtered);
+
+        samples++;
+      } else {
+        samples = 0;
+      }
     };
 
     float getValue (void) {
@@ -54,7 +59,7 @@ class Sensor {
     };
 
     bool isValid (void) {
-      return hasRisen() && !flags;
+      return hasRisen() && !hasFaults();
     }
 
     bool hasFaultLow(void) {
@@ -67,6 +72,10 @@ class Sensor {
 
     bool hasFaultVariance(void) {
       return flags & SENSOR_FAULT_VARIANCE;
+    }
+
+    bool hasFaults(void) {
+      return (flags != 0x0);
     }
 
     bool hasFaultHW(void) {
