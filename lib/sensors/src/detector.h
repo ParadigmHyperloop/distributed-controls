@@ -8,7 +8,7 @@ using namespace std;
 
 class Detector {
 public:
-  virtual fault_flags_t check(uint32_t value) = 0;
+  virtual fault_flags_t check(uint32_t value, fault_flags_t current) = 0;
 };
 
 #endif

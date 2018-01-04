@@ -1,6 +1,8 @@
 #include "../filter.h"
 #include <math.h>
 
+#ifndef PARADIGM_BIASFILTER_H
+#define PARADIGM_BIASFILTER_H
 
 class BiasFilter : public Filter
 {
@@ -28,3 +30,5 @@ public:
       return ceil(log(1.0-accuracy)/log(1.0-bias));
     }
 };
+
+#endif

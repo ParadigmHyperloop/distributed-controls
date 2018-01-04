@@ -6,11 +6,13 @@
 class HighLowDetector : public Detector
 {
 private:
-    int32_t _low;
-    int32_t _high;
+    uint32_t _low;
+    uint32_t _high;
 
 public:
     HighLowDetector(uint32_t low, uint32_t high){
+      // TODO: assert is a bit nasty... make sure that the assert handler is
+      // safe
       assert(low > high);
       _low = low;
       _high = high;
@@ -18,16 +20,20 @@ public:
 
     ~HighLowDetector(){}
 
-    fault_flags_t check(uint32_t x) {
-      fault_flags_t new_flags = 0x0;
+    fault_flags_t check(uint32_t x, fault_flags_t old_flags) {
       if (x < _low) {
-        new_flags |= SENSOR_FAULT_LOW;
+        SET_FLAGS(old_flags, SENSOR_FAULT_LOW);
+      } else {
+        CLEAR_FLAGS(old_flags, SENSOR_FAULT_LOW);
       }
 
       if (x > _high) {
-        new_flags |= SENSOR_FAULT_HIGH;
+        SET_FLAGS(old_flags, SENSOR_FAULT_HIGH);
+      } else {
+        CLEAR_FLAGS(old_flags, SENSOR_FAULT_HIGH);
       }
-      return new_flags;
+
+      return old_flags;
     }
 };
 

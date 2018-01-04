@@ -1,5 +1,8 @@
 #include "../converter.h"
 
+#ifndef PARADIGM_CUBICCONVERTER_H
+#define PARADIGM_CUBICCONVERTER_H
+
 class CubicConverter : public Converter
 {
 private:
@@ -22,3 +25,5 @@ public:
       return (_a * x * x * x) + (_b * x * x) + (_c * x) + (_d);
     }
 };
+
+#endif
