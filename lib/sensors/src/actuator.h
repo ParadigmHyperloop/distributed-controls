@@ -29,14 +29,14 @@ public:
   void activate(){
     //If actuator is inactive, activate it
     if(state == 0){
-      setState(0);
+      setState(1);
     }
   }
 
   void deactivate(){
     //If actuator is active or in fault state, deactivate it
     if(state == 1 || state == 2){
-      setState(1);
+      setState(0);
     }
   }
 };
