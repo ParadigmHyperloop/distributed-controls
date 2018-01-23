@@ -1,20 +1,14 @@
 class Actuator {
-private:
   enum state_t{
-    ACTIVE = 0,
-    ACTIVATING = 1,
-    INACTIVE = 2,
-    DEACTIVATING = 3,
-    FAULT = 4
+    ACTIVE,
+    ACTIVATING,
+    INACTIVE,
+    DEACTIVATING,
+    FAULT
   };
 
+private:
   state_t state;
-/*
-State Codes:
-0 - inactive
-1 - active
-2 - fault
-*/
 
 public:
   //Constructor and destructor
