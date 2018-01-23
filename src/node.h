@@ -69,7 +69,11 @@ public:
         return sensors[i]->getValue();
       }
     }
-    return NULL;
+  }
+
+  void engageEmergency(){
+    state = EMERGENCY;
+    //Code to safe the node here
   }
 
   void setName(String n) {
