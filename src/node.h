@@ -11,7 +11,7 @@ enum state_t{
   RUN,
   CONFIG,
   EMERGENCY
-}
+};
 
 class Node {
   Sensor *sensors[MAX_SENSORS] = {0};
