@@ -4,6 +4,8 @@
 #include <paradigm.h>
 #include <sensor.h>
 #include <string.h>
+#include <../lib/network/network_driver.h>
+#include <Ethernet2.h>
 
 #define MAX_SENSORS 24
 
@@ -17,8 +19,13 @@ class Node {
   Sensor *sensors[MAX_SENSORS] = {0};
   String name = "";
   state_t state;
+  byte mac[6] = {
+    0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
+  };
+  NetworkDriver network = NetworkDriver(mac, 8888);
 
 public:
+
   Node(String n, state_t s){
     name = n;
     state = s;
@@ -82,6 +89,13 @@ public:
 
   String getName(void) {
     return name;
+  }
+
+  void dumpNetworkInfo(){
+    //Serial.print("IP Address: ");
+    //Serial.println(network.getIP());
+    info("MAC Address: ");
+  //  info(network.getMACAddress());
   }
 };
 

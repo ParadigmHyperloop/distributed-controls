@@ -55,8 +55,15 @@ CubicConverter C(0,0,1,0);
 HighLowDetector D(8, 4086);
 InternalSensorDriver SD(1);
 Sensor S("test_sensor", &SD, &C, &Fi, &D);
+Node N("Test", RUN);
+IPAddress ip(IP_ADDRESS);
+byte mac[6] = {MAC_ADDRESS};
+char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
+EthernetUDP UDP;
 
 void setup() {
+  Ethernet.begin(mac, ip);
+  UDP.begin(8888);
   SerialUSB.begin(115200);
 
   while (!SerialUSB) {
@@ -69,12 +76,49 @@ void setup() {
 }
 
 void loop() {
-  S.addValue(1000);
-  info(S.getValue());
 
-  info("Completed Loop");
+  // UDP.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
+  // UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
+  // UDP.write("Response");
+  // UDP.endPacket();
+
+  int packetSize = UDP.parsePacket();
+  if (packetSize)
+  {
+    SerialUSB.print("Received packet of size ");
+    SerialUSB.println(packetSize);
+    SerialUSB.print("From ");
+    IPAddress remote = UDP.remoteIP();
+    for (int i = 0; i < 4; i++)
+    {
+      SerialUSB.print(remote[i], DEC);
+      if (i < 3)
+      {
+        SerialUSB.print(".");
+      }
+    }
+    SerialUSB.print(", port ");
+    SerialUSB.println(UDP.remotePort());
+
+    // read the packet into packetBufffer
+    UDP.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
+    SerialUSB.println("Contents:");
+    SerialUSB.println(packetBuffer);
+
+    // send a reply, to the IP address and port that sent us the packet we received
+    UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
+    UDP.write(packetBuffer);
+    UDP.endPacket();
+  }
+
+  // S.addValue(1000);
+  // info(S.getValue());
+
+  // N.dumpNetworkInfo();
+
+  // info("Completed Loop");
   // delay
-  delay(1000);
+  delay(10);
 }
 
 
