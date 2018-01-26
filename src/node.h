@@ -7,16 +7,32 @@
 
 #define MAX_SENSORS 24
 
+enum state_t{
+  RUN,
+  CONFIG,
+  EMERGENCY
+};
+
 class Node {
   Sensor *sensors[MAX_SENSORS] = {0};
   String name = "";
+  state_t state;
 
 public:
-  Node(String n){
+  Node(String n, state_t s){
     name = n;
+    state = s;
   }
 
   ~Node(){}
+
+  void setState(state_t s){
+    state = s;
+  }
+
+  state_t getState(){
+    return state;
+  }
 
   bool registerSensor(Sensor *s) {
     for (int i = 0; i < MAX_SENSORS; i++) {
@@ -45,6 +61,19 @@ public:
       }
     }
     return NULL;
+  }
+
+  float getSensorValue(Sensor *s){
+    for (int i = 0; i < MAX_SENSORS; i++){
+      if(sensors[i] == s){
+        return sensors[i]->getValue();
+      }
+    }
+  }
+
+  void engageEmergency(){
+    state = EMERGENCY;
+    //Code to safe the node here
   }
 
   void setName(String n) {

@@ -1,7 +1,7 @@
 #include "tests.h"
 
 void test_node() {
-  Node n("TestNode");
+  Node n("TestNode", RUN);
 
   TEST_ASSERT_EQUAL(n.getName().compareTo("TestNode"), 0);
   TEST_ASSERT_NOTEQUAL(n.getName().compareTo("TestNode2"), 0);
