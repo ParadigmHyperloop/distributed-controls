@@ -47,14 +47,24 @@
 #include <converters/cubic.h>
 #include <detectors/high_low.h>
 #include <sensor_drivers/internal.h>
+#include <sensor_drivers/sensor_sim_driver.h>
 
 #ifndef UNIT_TEST  // IMPORTANT LINE!
 
-BiasFilter Fi(0.5);
-CubicConverter C(0,0,1,0);
-HighLowDetector D(8, 4086);
-InternalSensorDriver SD(1);
-Sensor S("test_sensor", &SD, &C, &Fi, &D);
+const int NUM_OF_SENSORS = 16;
+
+const uint32_t con = 5;
+
+uint32_t constant(int mod){
+  return con + mod;
+}
+
+// BiasFilter Fi(0.5);
+// CubicConverter C(0,0,1,0);
+// HighLowDetector D(8, 4086);
+// SensorSimDriver SD(1, constant);
+// Sensor S("test_sensor", &SD, &C, &Fi, &D);
+Node N("Test", RUN);
 
 void setup() {
   SerialUSB.begin(115200);
@@ -64,14 +74,31 @@ void setup() {
   }
 
   info("SerialUSB Connected!");
+
   test();
   info("==== ALL TESTS PASSED! ====");
+
+  //Initialize sensors
+  for(int i = 0; i < NUM_OF_SENSORS; i++){
+    BiasFilter *Fi = new BiasFilter(0.5);
+    CubicConverter *C = new CubicConverter(0,0,1,0);
+    HighLowDetector *D = new HighLowDetector(8, 4086);
+    SensorSimDriver *SD = new SensorSimDriver(i, constant);
+    Sensor *S = new Sensor("test_sensor", SD, C, Fi, D);
+    N.registerSensor(S);
+  }
+  info("==== REGISTERED! ====");
+
+
+
 }
 
 void loop() {
-  S.addValue(1000);
-  info(S.getValue());
-
+  info("loop");
+  float *sensor_values = N.dumpSensorValues();
+  for(int i = 0; i < NUM_OF_SENSORS; i++){
+    info(sensor_values[i]);
+  }
   info("Completed Loop");
   // delay
   delay(1000);

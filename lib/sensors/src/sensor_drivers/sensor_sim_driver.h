@@ -8,25 +8,25 @@ class SensorSimDriver : public SensorDriver
 {
 private:
     int pin;
-    float (*func)(int);
+    uint32_t (*func)(int);
 public:
-    SensorSimDriver(int p, float (*f)(int)){
+    SensorSimDriver(int p, uint32_t (*f)(int)){
       pin = p;
       func = f;
     }
 
     ~SensorSimDriver(){}
 
-    SensorReadResult read_once(void) {
+    virtual SensorReadResult read_once(void) {
       uint32_t reading = func(pin);
       return SensorReadResult(0x0, reading);
     }
 
-    void setup(void) {
+    virtual void setup(void) {
 
     }
 
-    void teardown(void) {
+    virtual void teardown(void) {
 
     }
 };
