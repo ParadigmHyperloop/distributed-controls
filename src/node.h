@@ -15,6 +15,7 @@ enum state_t{
 
 class Node {
   Sensor *sensors[MAX_SENSORS] = {0};
+  int registered_sensors = 0;
   String name = "";
   state_t state;
 
@@ -38,6 +39,7 @@ public:
     for (int i = 0; i < MAX_SENSORS; i++) {
       if (sensors[i] == NULL) {
         sensors[i] = s;
+        registered_sensors++;
         return true;
       }
     }
@@ -48,6 +50,7 @@ public:
     for (int i = 0; i < MAX_SENSORS; i++) {
       if (sensors[i] == s) {
         sensors[i] = NULL;
+        registered_sensors--;
         return true;
       }
     }
@@ -69,6 +72,15 @@ public:
         return sensors[i]->getValue();
       }
     }
+  }
+
+  float* dumpSensorValues(){
+    float *sensor_values = new float[registered_sensors];
+    for (int i = 0; i < registered_sensors; i++){
+      sensors[i]->read();
+      sensor_values[i] = sensors[i]->getValue();
+    }
+    return sensor_values;
   }
 
   void engageEmergency(){
