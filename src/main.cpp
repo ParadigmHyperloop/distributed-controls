@@ -47,23 +47,13 @@
 #include <converters/cubic.h>
 #include <detectors/high_low.h>
 #include <sensor_drivers/internal.h>
-#include <sensor_drivers/sensor_sim_driver.h>
+#include <simulators/sensor_sim_driver.h>
+#include <simulators/simulation_functions.h>
 
 #ifndef UNIT_TEST  // IMPORTANT LINE!
 
 const int NUM_OF_SENSORS = 16;
 
-const uint32_t con = 5;
-
-uint32_t constant(int mod){
-  return con + mod;
-}
-
-// BiasFilter Fi(0.5);
-// CubicConverter C(0,0,1,0);
-// HighLowDetector D(8, 4086);
-// SensorSimDriver SD(1, constant);
-// Sensor S("test_sensor", &SD, &C, &Fi, &D);
 Node N("Test", RUN);
 
 void setup() {
@@ -87,7 +77,7 @@ void setup() {
     Sensor *S = new Sensor("test_sensor", SD, C, Fi, D);
     N.registerSensor(S);
   }
-  info("==== REGISTERED! ====");
+  info("==== REGISTERED SENSORS! ====");
 
 
 
@@ -99,6 +89,7 @@ void loop() {
   for(int i = 0; i < NUM_OF_SENSORS; i++){
     info(sensor_values[i]);
   }
+  
   info("Completed Loop");
   // delay
   delay(1000);

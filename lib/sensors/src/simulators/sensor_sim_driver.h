@@ -9,6 +9,7 @@ class SensorSimDriver : public SensorDriver
 private:
     int pin;
     uint32_t (*func)(int);
+    
 public:
     SensorSimDriver(int p, uint32_t (*f)(int)){
       pin = p;
