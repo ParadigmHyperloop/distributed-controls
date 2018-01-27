@@ -1,12 +1,13 @@
-# Paradigm Brake Module controller [![Build Status](https://travis-ci.org/ParadigmHyperloop/distributed-controls.svg?branch=master)](https://travis-ci.org/ParadigmHyperloop/distributed-controls)
+# Hyperloop Firmware [![Build Status](https://travis-ci.org/ParadigmHyperloop/hyperloop-firmware.svg?branch=master)](https://travis-ci.org/ParadigmHyperloop/hyperloop-firmware)
 
-This controller implements the Realtime brake control logic for the Paradigm air
-brakes. The module receives instructions on desired operating mode and desired
-force setpoint from a master node over UDP.
+This controller implements a generic controller for the Paradigm node boards 
+which act in a federation directed by the flight computer. The module receives
+control requests and sends telemetry over UDP.
 
 # Getting Started
 
-First lets setup the [Platformio IDE](http://platformio.org/), which is a set pf extensions for embedded development in Atom.
+First let's setup the [Platformio IDE](http://platformio.org/), which is a set 
+of extensions for embedded development in Atom.
 
 1. Download & Install Atom from [atom.io](https://atom.io)
 2. Open the package manager (CMD + SHIFT + P) and type `platformio` in the search box
@@ -14,8 +15,8 @@ First lets setup the [Platformio IDE](http://platformio.org/), which is a set pf
 
 Now that you have atom and platformio, you can clone this repo and then open the repo in atom
 
-1. Clone the repo however you desire
-2. Open the folder in atom (File > Open Folder)
+1. Clone this repo however you desire
+2. Open the folder in atom (File > Open Folder) or use the `atom` shell command
 3. The platformio sidebar should show up, click the `Verify` button (check box icon, second one down)
 4. Ensure that the project builds successfully.
 
@@ -36,18 +37,10 @@ Now for the fun part, grab an arduino nano (Also supports M0's you will need to 
 [DEBUG] [loop in src\main.cpp:283] --- Starting Actuators
 ```
 
-# Main Loop
-
-The main loop of the controller is fairly straitforward.  The following diagram might
-be useful.
-![Main Loop](https://user-images.githubusercontent.com/1410448/33865849-7fc6f698-dec1-11e7-9a94-bc9e728b2d72.png)
-
 # Dev Notes
 
-This project uses the Arduino Bootloader and is written in Arduino C++ with
-heavy preference to the standard C dialect to keep things simple.  In the
-future templates of the `node_t` struct should be implemented to abstract a
-common node and overlay additional functionality on top of it.
+This project uses the Arduino Bootloader for now and is written in Arduino 
+C++ with a focus on object oriented programming to enable modularity.
 
 # License
 
