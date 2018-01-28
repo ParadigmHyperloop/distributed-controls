@@ -43,7 +43,7 @@
 #include "node.h"
 #include "tests.h"
 
-#include <filters/bias.h>
+#include <bias.h>
 #include <converters/cubic.h>
 #include <detectors/high_low.h>
 #include <sensor_drivers/internal.h>
@@ -79,8 +79,6 @@ void setup() {
   }
   info("==== REGISTERED SENSORS! ====");
 
-
-
 }
 
 void loop() {
@@ -89,7 +87,7 @@ void loop() {
   for(int i = 0; i < NUM_OF_SENSORS; i++){
     info(sensor_values[i]);
   }
-  
+
   info("Completed Loop");
   // delay
   delay(1000);

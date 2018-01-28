@@ -5,7 +5,7 @@
 #include <sensor.h>
 #include "node.h"
 
-#include <filters/bias.h>
+#include <bias.h>
 #include <converters/cubic.h>
 #include <sensor_drivers/internal.h>
 #include <detectors/high_low.h>

@@ -1,4 +1,4 @@
-#include "../filter.h"
+#include "filter.h"
 #include <math.h>
 
 #ifndef PARADIGM_BIASFILTER_H

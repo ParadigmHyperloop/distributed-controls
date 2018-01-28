@@ -21,8 +21,12 @@ private:
 
 public:
   //Constructor and destructor
-  Actuator(state_t s){
+  Actuator(state_t s, ActuatorDriver *ad, Filter *f, Converter *c, Governor *g){
     state = s;
+    driver = ad;
+    filter = f;
+    converter = c;
+    governor = g;
   }
 
   ~Actuator(){};
@@ -49,8 +53,4 @@ public:
       setState(INACTIVE);
     }
   }
-};
-
-class Valve : public Actuator {
-
 };
