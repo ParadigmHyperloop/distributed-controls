@@ -14,6 +14,7 @@ class Actuator {
 
 private:
   state_t state;
+  int channel;
   ActuatorDriver *driver;
   Filter *filter;
   Converter *converter;
@@ -21,8 +22,9 @@ private:
 
 public:
   //Constructor and destructor
-  Actuator(state_t s, ActuatorDriver *ad, Filter *f, Converter *c, Governor *g){
+  Actuator(state_t s, int ch; ActuatorDriver *ad, Filter *f, Converter *c, Governor *g){
     state = s;
+    channel = ch;
     driver = ad;
     filter = f;
     converter = c;
