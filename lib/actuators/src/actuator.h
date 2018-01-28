@@ -1,3 +1,8 @@
+#include "filter.h"
+#include "drivers/actuator_drivers.h"
+#include "governors/governors.h"
+#include "converters/converters.h"
+
 class Actuator {
   enum state_t{
     ACTIVE,
@@ -9,6 +14,10 @@ class Actuator {
 
 private:
   state_t state;
+  ActuatorDriver *driver;
+  Filter *filter;
+  Converter *converter;
+  Governor *governor;
 
 public:
   //Constructor and destructor
