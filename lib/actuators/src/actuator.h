@@ -15,6 +15,7 @@ class Actuator {
 private:
   state_t state;
   int channel;
+  float target_value;
   ActuatorDriver *driver;
   Filter *filter;
   Converter *converter;
@@ -44,6 +45,7 @@ public:
 
   void set(float value){
     if(governor->checkValue(value)){ //Validate value
+      target_value = value; //Update target value
       float filtered_value = filter->filter(value); //Filter value
       uint32_t converted_value = converter->convert(filtered_value); //Convert value from human readable
 
@@ -54,7 +56,11 @@ public:
         driver->set(converted_value, channel);
       }
     } else {
-      //Send an error
+      //Send an error if value cannot be validatedq
     }
+  }
+
+  void update(){
+    set(target_value);
   }
 };
