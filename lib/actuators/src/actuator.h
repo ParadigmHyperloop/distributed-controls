@@ -49,12 +49,7 @@ public:
       float filtered_value = filter->filter(value); //Filter value
       uint32_t converted_value = converter->convert(filtered_value); //Convert value from human readable
 
-      //If channel is 0, this is a DACtuator
-      if(channel == 0){
-        driver->set(converted_value);
-      } else {
-        driver->set(converted_value, channel);
-      }
+      driver->set(converted_value, channel);
     } else {
       //Send an error if value cannot be validatedq
     }
