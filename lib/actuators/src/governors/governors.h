@@ -1,4 +1,4 @@
 class Governor {
 public:
-  bool checkValue(float val);
+  virtual bool checkValue(float val);
 };

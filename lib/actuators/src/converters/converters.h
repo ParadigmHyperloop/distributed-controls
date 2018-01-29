@@ -2,5 +2,5 @@
 
 class Converter{
 public:
-  uint32_t convert(float val);
+  virtual uint32_t convert(float val);
 };
