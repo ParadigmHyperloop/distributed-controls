@@ -2,6 +2,7 @@
 
 class ActuatorDriver{
 public:
+  virtual ~ActuatorDriver(){}
   virtual void set(uint32_t x);
   virtual void set(uint32_t x, int ch);
 };
