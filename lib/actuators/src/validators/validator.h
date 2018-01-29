@@ -1,5 +1,5 @@
-class Governor {
+class Validator {
 public:
-  virtual ~Governor(){}
+  virtual ~Validator(){}
   virtual bool checkValue(float val);
 };

@@ -1,7 +1,7 @@
 #include "filter.h"
-#include "drivers/actuator_drivers.h"
-#include "governors/governors.h"
-#include "converters/converters.h"
+#include "drivers/actuator_driver.h"
+#include "validators/validator.h"
+#include "converters/converter.h"
 
 class Actuator {
   enum state_t{
@@ -19,17 +19,17 @@ private:
   ActuatorDriver *driver;
   Filter *filter;
   Converter *converter;
-  Governor *governor;
+  Validator *validator;
 
 public:
   //Constructor and destructor
-  Actuator(state_t s, int ch, ActuatorDriver *ad, Filter *f, Converter *c, Governor *g){
+  Actuator(state_t s, int ch, ActuatorDriver *ad, Filter *f, Converter *c, Validator *v){
     state = s;
     channel = ch;
     driver = ad;
     filter = f;
     converter = c;
-    governor = g;
+    validator = v;
   }
 
   ~Actuator(){};
@@ -44,7 +44,7 @@ public:
   }
 
   void set(float value){
-    if(governor->checkValue(value)){ //Validate value
+    if(validator->checkValue(value)){ //Validate value
       target_value = value; //Update target value
       float filtered_value = filter->filter(value); //Filter value
       uint32_t converted_value = converter->convert(filtered_value); //Convert value from human readable
