@@ -6,6 +6,7 @@
 #include "node.h"
 
 #include <bias.h>
+#include <on_off.h>
 #include <converters/cubic.h>
 #include <sensor_drivers/internal.h>
 #include <detectors/high_low.h>

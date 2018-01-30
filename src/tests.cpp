@@ -11,6 +11,7 @@ bool __TEST_SILENCE = false;
  */
 void test_high_low_detector(void);
 void test_bias_filter(void);
+void test_on_off_filter(void);
 void test_cubic_converter(void);
 void test_retriable(void);
 void test_sensor_driver(void);
@@ -20,6 +21,7 @@ void test_node(void);
 void test() {
   test_high_low_detector();
   test_bias_filter();
+  test_on_off_filter();
   test_cubic_converter();
   test_retriable();
   test_sensor_driver();
