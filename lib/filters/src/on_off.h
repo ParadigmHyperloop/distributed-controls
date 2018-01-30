@@ -25,7 +25,7 @@ public:
     return old_value;
   }
 
-  float filter(float n){
+  virtual float filter(float n){
     //Change n to be +/- stepsize from the old value for smoothing
     if(stepsize <= abs(old_value - n)){
       if(n > old_value){
@@ -48,9 +48,14 @@ public:
     return state;
   }
 
-  void reset(){
+  virtual void reset(){
     old_value = 0.0;
     state = 0;
+  }
+
+  virtual int32_t getRiseTime(float accuracy){
+    // TODO: This is random
+    return 10;
   }
 
 };
