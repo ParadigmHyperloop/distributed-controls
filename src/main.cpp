@@ -44,7 +44,7 @@
 #include "tests.h"
 
 #include <bias.h>
-#include <converters/cubic.h>
+#include <cubic.h>
 #include <detectors/high_low.h>
 #include <sensor_drivers/internal.h>
 #include <simulators/sensor_sim_driver.h>

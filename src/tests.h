@@ -7,7 +7,10 @@
 
 #include <bias.h>
 #include <on_off.h>
-#include <converters/cubic.h>
+#include <drivers/actuator_driver.h>
+#include <validators/validator.h>
+#include <converter.h>
+#include <cubic.h>
 #include <sensor_drivers/internal.h>
 #include <detectors/high_low.h>
 
