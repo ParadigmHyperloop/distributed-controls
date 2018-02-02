@@ -56,6 +56,6 @@ public:
   }
 
   void update(){
-    set(target_value);
+    set(filter->filter(target_value));
   }
 };
