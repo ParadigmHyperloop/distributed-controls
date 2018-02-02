@@ -37,6 +37,7 @@ public:
     //Change n to be +/- stepsize from the old value for smoothing
     if(stepsize <= abs(old_value - n)){
       if(n > old_value){
+        //Double the stepsize if going up to avoid feedback loop
         n = old_value + stepsize*2;
       } else {
         n = old_value - stepsize;
