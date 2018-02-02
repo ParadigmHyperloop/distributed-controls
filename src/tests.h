@@ -13,6 +13,8 @@
 
 extern bool __TEST_SILENCE;
 
+const float EPSILON = 0.0001;
+
 #define __TEST(cond, a, b) do { \
   if (cond) { \
     if (!__TEST_SILENCE) { \
@@ -40,7 +42,7 @@ extern bool __TEST_SILENCE;
 #define TEST_ASSERT_EQUAL(a, b) __TEST((a) == (b), (a), (b))
 #define TEST_ASSERT_NOTEQUAL(a, b) __TEST((a) != (b), (a), (b))
 #define TEST_ASSERT_WITHIN(a, b, e) __TEST(((a) < ((b) + (e)) && (a) > ((b) - (e))), (a), (b))
-
+#define TEST_ALMOST_EQUAL(a, b) __TEST((a) > (b) - EPSILON && (a) < (b) + EPSILON, (a), (b))
 
 // Used to prevent output of passing test cases for things like tight loops
 #define TEST_SILENCE(x) do { \
