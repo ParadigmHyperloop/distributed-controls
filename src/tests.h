@@ -5,7 +5,8 @@
 #include <sensor.h>
 #include "node.h"
 
-#include <filters/bias.h>
+#include <bias.h>
+#include <on_off.h>
 #include <converters/cubic.h>
 #include <sensor_drivers/internal.h>
 #include <detectors/high_low.h>
@@ -39,7 +40,6 @@ extern bool __TEST_SILENCE;
 #define TEST_ASSERT_EQUAL(a, b) __TEST((a) == (b), (a), (b))
 #define TEST_ASSERT_NOTEQUAL(a, b) __TEST((a) != (b), (a), (b))
 #define TEST_ASSERT_WITHIN(a, b, e) __TEST(((a) < ((b) + (e)) && (a) > ((b) - (e))), (a), (b))
-
 
 // Used to prevent output of passing test cases for things like tight loops
 #define TEST_SILENCE(x) do { \
