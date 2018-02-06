@@ -1,4 +1,4 @@
-#include "../converter.h"
+#include "converter.h"
 
 #ifndef PARADIGM_CUBICCONVERTER_H
 #define PARADIGM_CUBICCONVERTER_H
